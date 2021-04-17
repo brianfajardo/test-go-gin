@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"net/http"
 	"os"
 
 	"github.com/brianfajardo/gin-test/controller"
@@ -25,6 +26,11 @@ func main() {
 	server.Run(":8080")
 }
 
+func initLogger() {
+	file, _ := os.Create("myLog.log")
+	gin.DefaultWriter = io.MultiWriter(file, os.Stdout)
+}
+
 func initMiddleware(server *gin.Engine) {
 	server.Use(
 		gin.Recovery(),
@@ -39,11 +45,11 @@ func initRouteHandlers(server *gin.Engine) {
 	})
 
 	server.POST("/videos", func(ctx *gin.Context) {
-		ctx.JSON(200, videoController.Save(ctx))
+		err := videoController.Save(ctx)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			ctx.JSON(http.StatusOK, gin.H{"message": "Video successfully saved"})
+		}
 	})
-}
-
-func initLogger() {
-	file, _ := os.Create("myLog.log")
-	gin.DefaultWriter = io.MultiWriter(file, os.Stdout)
 }
