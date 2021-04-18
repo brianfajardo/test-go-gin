@@ -1,6 +1,9 @@
 package controller
 
 import (
+	"net/http"
+	"net/url"
+
 	"github.com/brianfajardo/gin-test/entity"
 	"github.com/brianfajardo/gin-test/service"
 	"github.com/brianfajardo/gin-test/validators"
@@ -11,6 +14,7 @@ import (
 type VideoController interface {
 	FindAll() []entity.Video
 	Save(ctx *gin.Context) error
+	ShowAll(ctx *gin.Context)
 }
 
 type controller struct {
@@ -20,19 +24,23 @@ type controller struct {
 var validate *validator.Validate
 
 func New(service service.VideoService) VideoController {
-	validate = validator.New()
-	validate.RegisterValidation("is-friendly", validators.ValidateFriendlyTitle)
+	initValidators()
 
 	return &controller{
 		service,
 	}
 }
 
-func (controller *controller) FindAll() []entity.Video {
-	return controller.service.FindAll()
+func initValidators() {
+	validate = validator.New()
+	validate.RegisterValidation("containsProfanity", validators.ValidateProfanity)
 }
 
-func (controller *controller) Save(ctx *gin.Context) error {
+func (c *controller) FindAll() []entity.Video {
+	return c.service.FindAll()
+}
+
+func (c *controller) Save(ctx *gin.Context) error {
 	var video entity.Video
 
 	err := ctx.ShouldBindJSON(&video)
@@ -45,7 +53,22 @@ func (controller *controller) Save(ctx *gin.Context) error {
 		return err
 	}
 
-	controller.service.Save(video)
+	// Rewrite Youtube video urls if they are not embedded
+	m, _ := url.Parse(video.Url)
+	videoId := m.Query().Get("v")
+	video.Url = "https://www.youtube.com/embed/" + videoId
+
+	c.service.Save(video)
 
 	return nil
+}
+
+func (c *controller) ShowAll(ctx *gin.Context) {
+	videos := c.service.FindAll()
+	templateData := gin.H{
+		"title":  "Video Page",
+		"videos": videos,
+	}
+
+	ctx.HTML(http.StatusOK, "index.html", templateData)
 }

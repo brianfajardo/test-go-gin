@@ -19,6 +19,9 @@ var (
 func main() {
 	server := gin.New()
 
+	server.Static("/css", "./templates/css")
+	server.LoadHTMLGlob("templates/*.html")
+
 	initLogger()
 	initMiddleware(server)
 	initRouteHandlers(server)
@@ -40,16 +43,24 @@ func initMiddleware(server *gin.Engine) {
 }
 
 func initRouteHandlers(server *gin.Engine) {
-	server.GET("/videos", func(ctx *gin.Context) {
-		ctx.JSON(200, videoController.FindAll())
-	})
+	apiRoutes := server.Group("/api")
+	{
+		apiRoutes.GET("/videos", func(ctx *gin.Context) {
+			ctx.JSON(200, videoController.FindAll())
+		})
 
-	server.POST("/videos", func(ctx *gin.Context) {
-		err := videoController.Save(ctx)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		} else {
-			ctx.JSON(http.StatusOK, gin.H{"message": "Video successfully saved"})
-		}
-	})
+		apiRoutes.POST("/videos", func(ctx *gin.Context) {
+			err := videoController.Save(ctx)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			} else {
+				ctx.JSON(http.StatusOK, gin.H{"message": "Video successfully saved"})
+			}
+		})
+	}
+
+	viewRoutes := server.Group("/views")
+	{
+		viewRoutes.GET("/videos", videoController.ShowAll)
+	}
 }

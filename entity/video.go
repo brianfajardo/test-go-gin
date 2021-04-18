@@ -10,6 +10,6 @@ type Person struct {
 type Video struct {
 	Author      Person `json:"author" validate:"required"`
 	Description string `json:"description" validate:"max=140"`
-	Title       string `json:"title" validate:"min=2,max=10,is-friendly"`
-	Url         string `json:"url" validate:"required,url"`
+	Title       string `json:"title" validate:"min=2,max=10,containsProfanity"`
+	Url         string `json:"url" validate:"required,url,contains=watch?v="`
 }
