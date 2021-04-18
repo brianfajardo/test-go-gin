@@ -1,15 +1,15 @@
 package entity
 
 type Person struct {
-	Age       uint8  `json:"age" binding:"gte=1,lte=150"`
+	Age       uint8  `json:"age" validate:"gte=1,lte=150"`
 	Email     string `json:"email" validate:"required,email"`
-	FirstName string `json:"firstName" binding:"required"`
-	LastName  string `json:"lastName" binding:"required"`
+	FirstName string `json:"firstName" validate:"required"`
+	LastName  string `json:"lastName" validate:"required"`
 }
 
 type Video struct {
-	Author      Person `json:"author" binding:"required"`
-	Description string `json:"description" binding:"max=140"`
-	Title       string `json:"title" binding:"min=2,max=10"`
-	Url         string `json:"url" binding:"required,url"`
+	Author      Person `json:"author" validate:"required"`
+	Description string `json:"description" validate:"max=140"`
+	Title       string `json:"title" validate:"min=2,max=10,is-friendly"`
+	Url         string `json:"url" validate:"required,url"`
 }
